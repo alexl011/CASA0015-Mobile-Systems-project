@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 void main() {
   runApp(SmartLuggageApp());
@@ -26,7 +27,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _pages = [
     HomePage(),
-    WeightPage(),
+    LuggagePage(),
     FindPage(),
   ];
 
@@ -40,7 +41,7 @@ class _MainScreenState extends State<MainScreen> {
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: 'Weight'),
+          BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: 'My Luggage'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Find'),
         ],
       ),
@@ -71,27 +72,57 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class WeightPage extends StatelessWidget {
-  final double currentWeight = 25.5; // kg
-  final double maxWeight = 23.0; // kg (e.g., airline limit)
+
+
+class LuggagePage extends StatefulWidget {
+  @override
+  _LuggagePageState createState() => _LuggagePageState();
+}
+
+class _LuggagePageState extends State<LuggagePage> {
+  double luggageWeight = 18.5;
+  double maxWeight = 23.0;
 
   @override
   Widget build(BuildContext context) {
-    final isOverweight = currentWeight > maxWeight;
+    double percent = (luggageWeight / maxWeight).clamp(0.0, 1.0);
+    bool isOverweight = luggageWeight > maxWeight;
 
-    return Center(
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Current Luggage Weight', style: TextStyle(fontSize: 18)),
-          SizedBox(height: 10),
-          Text('$currentWeight kg',
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: isOverweight ? Colors.red : Colors.green)),
-          SizedBox(height: 20),
-          Text('Limit: $maxWeight kg', style: TextStyle(fontSize: 16)),
-          SizedBox(height: 10),
+          CircularPercentIndicator(
+            radius: 120.0,
+            lineWidth: 14.0,
+            percent: percent,
+            center: Text("${luggageWeight.toStringAsFixed(1)} kg",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            progressColor: isOverweight ? Colors.red : Colors.indigo,
+            backgroundColor: Colors.grey.shade300,
+            circularStrokeCap: CircularStrokeCap.round,
+            animation: true,
+          ),
+          SizedBox(height: 30),
+          Text("Weight Limit: ${maxWeight.toStringAsFixed(1)} kg"),
           if (isOverweight)
-            Text('Overweight! Please reduce luggage.', style: TextStyle(color: Colors.red)),
+            Text("Overweight! Please reduce luggage.",
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          SizedBox(height: 30),
+          Text("Customize Weight Limit:"),
+          Slider(
+            value: maxWeight,
+            min: 10,
+            max: 50,
+            divisions: 40,
+            label: maxWeight.toStringAsFixed(1),
+            onChanged: (value) {
+              setState(() {
+                maxWeight = value;
+              });
+            },
+          )
         ],
       ),
     );
