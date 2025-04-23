@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'styles/map_styles.dart';
 
 void main() {
   runApp(SmartLuggageApp());
@@ -105,12 +106,26 @@ class _LuggagePageState extends State<LuggagePage> {
             animation: true,
           ),
           SizedBox(height: 30),
-          Text("Weight Limit: ${maxWeight.toStringAsFixed(1)} kg"),
+          Text(
+            "Weight Limit: ${maxWeight.toStringAsFixed(1)} kg",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           if (isOverweight)
             Text("Overweight! Please reduce luggage.",
                 style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           SizedBox(height: 30),
-          Text("Customize Weight Limit:"),
+          Text(
+            "Customize Weight Limit:",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           Slider(
             value: maxWeight,
             min: 10,
@@ -129,19 +144,54 @@ class _LuggagePageState extends State<LuggagePage> {
   }
 }
 
-class FindPage extends StatelessWidget {
+class FindPage extends StatefulWidget {
+  @override
+  _FindPageState createState() => _FindPageState();
+}
+
+class _FindPageState extends State<FindPage> {
+  GoogleMapController? mapController;
+  final LatLng luggageLocation = LatLng(37.4219999, -122.0840575); // Sample location
+  bool isMapReady = false;
+
   void triggerSound() {
     print('🔊 Luggage is beeping!'); // Replace with actual Bluetooth/IoT trigger logic
   }
 
-  final LatLng luggageLocation = LatLng(37.4219999, -122.0840575); // Sample location (Google HQ)
+  void _onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+    setState(() {
+      isMapReady = true;
+    });
+    _setMapStyle(controller);
+  }
+
+  Future<void> _setMapStyle(GoogleMapController controller) async {
+    await controller.setMapStyle(MapStyles.lightStyle);
+  }
+
+  void _centerOnLuggage() {
+    mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: luggageLocation,
+          zoom: 17.0,
+          tilt: 45.0,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: GoogleMap(
+    // Get the top padding to account for safe area (including Dynamic Island)
+    final double topPadding = MediaQuery.of(context).padding.top;
+    
+    return Scaffold(
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
               target: luggageLocation,
               zoom: 15,
@@ -150,31 +200,91 @@ class FindPage extends StatelessWidget {
               Marker(
                 markerId: MarkerId('luggage'),
                 position: luggageLocation,
-                infoWindow: InfoWindow(title: 'My Luggage'),
+                infoWindow: InfoWindow(
+                  title: 'My Luggage',
+                  snippet: 'Last seen 2 minutes ago',
+                ),
+                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
               ),
             },
+            mapType: MapType.normal,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            compassEnabled: true,
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Text('Can\'t find your luggage?', style: TextStyle(fontSize: 20)),
-              SizedBox(height: 10),
-              ElevatedButton.icon(
-                icon: Icon(Icons.volume_up),
-                label: Text('Ring Luggage'),
-                onPressed: () {
-                  triggerSound();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Signal sent to luggage.')),
-                  );
-                },
+          if (isMapReady) ...[
+            // Distance Card - adjusted for Dynamic Island
+            Positioned(
+              top: topPadding + 16, // Add safe area padding plus some extra space
+              left: 16,
+              right: 16,
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.indigo),
+                      SizedBox(width: 8),
+                      Text(
+                        'Distance: 120m away',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
+            ),
+          ],
+        ],
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'center',
+            onPressed: _centerOnLuggage,
+            child: Icon(Icons.center_focus_strong, color: Colors.white),
+            backgroundColor: Colors.indigo,
           ),
-        ),
-      ],
+          SizedBox(height: 16),
+          FloatingActionButton.extended(
+            heroTag: 'ring',
+            onPressed: () {
+              triggerSound();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.volume_up, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Signal sent to luggage'),
+                    ],
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.volume_up, color: Colors.white),
+            label: Text(
+              'Ring Luggage',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: Colors.indigo,
+          ),
+        ],
+      ),
     );
   }
 }
