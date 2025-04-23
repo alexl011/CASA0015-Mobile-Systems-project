@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'styles/map_styles.dart';
 
 void main() {
@@ -83,6 +84,26 @@ class LuggagePage extends StatefulWidget {
 class _LuggagePageState extends State<LuggagePage> {
   double luggageWeight = 18.5;
   double maxWeight = 23.0;
+  final String _weightLimitKey = 'weight_limit';
+  SharedPreferences? _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedWeightLimit();
+  }
+
+  Future<void> _loadSavedWeightLimit() async {
+    _prefs = await SharedPreferences.getInstance();
+    setState(() {
+      maxWeight = _prefs?.getDouble(_weightLimitKey) ?? 23.0;
+    });
+  }
+
+  Future<void> _saveWeightLimit(double value) async {
+    _prefs = await SharedPreferences.getInstance();
+    await _prefs?.setDouble(_weightLimitKey, value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +157,7 @@ class _LuggagePageState extends State<LuggagePage> {
               setState(() {
                 maxWeight = value;
               });
+              _saveWeightLimit(value); // Save the new value
             },
           )
         ],
@@ -153,6 +175,7 @@ class _FindPageState extends State<FindPage> {
   GoogleMapController? mapController;
   final LatLng luggageLocation = LatLng(37.4219999, -122.0840575); // Sample location
   bool isMapReady = false;
+  double _currentZoom = 15.0;
 
   void triggerSound() {
     print('🔊 Luggage is beeping!'); // Replace with actual Bluetooth/IoT trigger logic
@@ -182,9 +205,32 @@ class _FindPageState extends State<FindPage> {
     );
   }
 
+  void _zoomIn() {
+    _currentZoom = (_currentZoom + 1).clamp(1.0, 20.0);
+    mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: luggageLocation,
+          zoom: _currentZoom,
+        ),
+      ),
+    );
+  }
+
+  void _zoomOut() {
+    _currentZoom = (_currentZoom - 1).clamp(1.0, 20.0);
+    mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: luggageLocation,
+          zoom: _currentZoom,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the top padding to account for safe area (including Dynamic Island)
     final double topPadding = MediaQuery.of(context).padding.top;
     
     return Scaffold(
@@ -194,7 +240,7 @@ class _FindPageState extends State<FindPage> {
             onMapCreated: _onMapCreated,
             initialCameraPosition: CameraPosition(
               target: luggageLocation,
-              zoom: 15,
+              zoom: _currentZoom,
             ),
             markers: {
               Marker(
@@ -210,13 +256,16 @@ class _FindPageState extends State<FindPage> {
             mapType: MapType.normal,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
+            zoomControlsEnabled: false, // Disable default zoom controls since we have custom ones
             compassEnabled: true,
+            onCameraMove: (CameraPosition position) {
+              _currentZoom = position.zoom;
+            },
           ),
           if (isMapReady) ...[
-            // Distance Card - adjusted for Dynamic Island
+            // Distance Card
             Positioned(
-              top: topPadding + 16, // Add safe area padding plus some extra space
+              top: topPadding + 16,
               left: 16,
               right: 16,
               child: Card(
@@ -243,47 +292,71 @@ class _FindPageState extends State<FindPage> {
           ],
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'center',
-            onPressed: _centerOnLuggage,
-            child: Icon(Icons.center_focus_strong, color: Colors.white),
-            backgroundColor: Colors.indigo,
-          ),
-          SizedBox(height: 16),
-          FloatingActionButton.extended(
-            heroTag: 'ring',
-            onPressed: () {
-              triggerSound();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.volume_up, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('Signal sent to luggage'),
-                    ],
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(left: 32.0), // Add padding to prevent buttons from stretching too wide
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end, // Ensure everything aligns to the right
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end, // Align buttons to the right
+              mainAxisSize: MainAxisSize.min, // Make row take minimum space needed
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'zoomOut',
+                  onPressed: _zoomOut,
+                  child: Icon(Icons.remove, color: Colors.white),
+                  backgroundColor: Colors.indigo,
                 ),
-              );
-            },
-            icon: Icon(Icons.volume_up, color: Colors.white),
-            label: Text(
-              'Ring Luggage',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
+                SizedBox(width: 8),
+                FloatingActionButton(
+                  heroTag: 'center',
+                  onPressed: _centerOnLuggage,
+                  child: Icon(Icons.center_focus_strong, color: Colors.white),
+                  backgroundColor: Colors.indigo,
+                ),
+                SizedBox(width: 8),
+                FloatingActionButton.small(
+                  heroTag: 'zoomIn',
+                  onPressed: _zoomIn,
+                  child: Icon(Icons.add, color: Colors.white),
+                  backgroundColor: Colors.indigo,
+                ),
+              ],
             ),
-            backgroundColor: Colors.indigo,
-          ),
-        ],
+            SizedBox(height: 16),
+            FloatingActionButton.extended(
+              heroTag: 'ring',
+              onPressed: () {
+                triggerSound();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.volume_up, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Signal sent to luggage'),
+                      ],
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(Icons.volume_up, color: Colors.white),
+              label: Text(
+                'Ring Luggage',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              backgroundColor: Colors.indigo,
+            ),
+          ],
+        ),
       ),
     );
   }
