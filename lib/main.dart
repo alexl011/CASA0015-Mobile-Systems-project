@@ -11,7 +11,7 @@ class SmartLuggageApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Smart Luggage Tracker',
+      title: 'Luggo',
       theme: ThemeData(primarySwatch: Colors.indigo),
       home: MainScreen(),
     );
@@ -35,7 +35,6 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Smart Luggage Tracker')),
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -61,7 +60,9 @@ class HomePage extends StatelessWidget {
           children: [
             Icon(Icons.luggage, size: 100, color: Colors.indigo),
             SizedBox(height: 20),
-            Text('Welcome to Smart Luggage Tracker!',
+            Text('Welcome to Luggo!!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            Text('Your Smart Luggage Tracking App',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
             SizedBox(height: 10),
             Text('Track your luggage location and weight in real-time.',
@@ -72,8 +73,6 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
-
 
 class LuggagePage extends StatefulWidget {
   @override
@@ -132,7 +131,7 @@ class _LuggagePageState extends State<LuggagePage> {
 
 class FindPage extends StatelessWidget {
   void triggerSound() {
-    print('🔊 Luggage is beeping!');
+    print('🔊 Luggage is beeping!'); // Replace with actual Bluetooth/IoT trigger logic
   }
 
   final LatLng luggageLocation = LatLng(37.4219999, -122.0840575); // Sample location (Google HQ)
@@ -160,7 +159,7 @@ class FindPage extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Text('Can’t find your luggage?', style: TextStyle(fontSize: 20)),
+              Text('Can\'t find your luggage?', style: TextStyle(fontSize: 20)),
               SizedBox(height: 10),
               ElevatedButton.icon(
                 icon: Icon(Icons.volume_up),
