@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
   runApp(SmartLuggageApp());
@@ -131,33 +132,50 @@ class _LuggagePageState extends State<LuggagePage> {
 
 class FindPage extends StatelessWidget {
   void triggerSound() {
-    print('🔊 Luggage is beeping!'); // Replace with actual Bluetooth/IoT trigger logic
+    print('🔊 Luggage is beeping!');
   }
+
+  final LatLng luggageLocation = LatLng(37.4219999, -122.0840575); // Sample location (Google HQ)
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.location_on, size: 100, color: Colors.indigo),
-            SizedBox(height: 20),
-            Text('Can’t find your luggage?', style: TextStyle(fontSize: 20)),
-            SizedBox(height: 10),
-            ElevatedButton.icon(
-              icon: Icon(Icons.volume_up),
-              label: Text('Ring Luggage'),
-              onPressed: () {
-                triggerSound();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Signal sent to luggage.')),);
-              },
+    return Column(
+      children: [
+        Expanded(
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: luggageLocation,
+              zoom: 15,
             ),
-          ],
+            markers: {
+              Marker(
+                markerId: MarkerId('luggage'),
+                position: luggageLocation,
+                infoWindow: InfoWindow(title: 'My Luggage'),
+              ),
+            },
+          ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text('Can’t find your luggage?', style: TextStyle(fontSize: 20)),
+              SizedBox(height: 10),
+              ElevatedButton.icon(
+                icon: Icon(Icons.volume_up),
+                label: Text('Ring Luggage'),
+                onPressed: () {
+                  triggerSound();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Signal sent to luggage.')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
