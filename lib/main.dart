@@ -34,13 +34,19 @@ class _MainScreenState extends State<MainScreen> {
     FindPage(),
   ];
 
+  void changePage(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: changePage,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: 'My Luggage'),
@@ -54,21 +60,228 @@ class _MainScreenState extends State<MainScreen> {
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome Section
+              Center(
+                child: Hero(
+                  tag: 'logo',
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.luggage,
+                      size: 80,
+                      color: Colors.indigo,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 24),
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'Welcome to Luggo!',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Your Smart Luggage Companion',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 32),
+
+              // Quick Actions Section
+              Text(
+                'Quick Actions',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickActionCard(
+                      context,
+                      icon: Icons.monitor_weight,
+                      title: 'Check Weight',
+                      subtitle: 'Monitor your luggage weight',
+                      color: Colors.blue,
+                      onTap: () {
+                        final mainScreenState = context.findAncestorStateOfType<_MainScreenState>();
+                        mainScreenState?.changePage(1); // Navigate to My Luggage page
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: _buildQuickActionCard(
+                      context,
+                      icon: Icons.location_on,
+                      title: 'Locate',
+                      subtitle: 'Find your luggage',
+                      color: Colors.orange,
+                      onTap: () {
+                        final mainScreenState = context.findAncestorStateOfType<_MainScreenState>();
+                        mainScreenState?.changePage(2); // Navigate to Find page
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 32),
+
+              // Features Section
+              Text(
+                'Features',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(height: 16),
+              _buildFeatureCard(
+                icon: Icons.bluetooth_connected,
+                title: 'Real-time Tracking',
+                description: 'Keep track of your luggage location in real-time',
+                color: Colors.green,
+              ),
+              SizedBox(height: 12),
+              _buildFeatureCard(
+                icon: Icons.battery_charging_full,
+                title: 'Long Battery Life',
+                description: 'Up to 15 days of battery life on a single charge',
+                color: Colors.purple,
+              ),
+              SizedBox(height: 12),
+              _buildFeatureCard(
+                icon: Icons.notifications_active,
+                title: 'Instant Alerts',
+                description: 'Get notified when your luggage moves away',
+                color: Colors.red,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 32, color: color),
+              SizedBox(height: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
           children: [
-            Icon(Icons.luggage, size: 100, color: Colors.indigo),
-            SizedBox(height: 20),
-            Text('Welcome to Luggo!!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            Text('Your Smart Luggage Tracking App',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            SizedBox(height: 10),
-            Text('Track your luggage location and weight in real-time.',
-                textAlign: TextAlign.center),
+            Container(
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 24, color: color),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
