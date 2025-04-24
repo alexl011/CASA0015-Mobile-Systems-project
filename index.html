@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luggo - Smart Luggage Companion</title>
+    <link rel="icon" type="image/png" href="images/icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #3f51b5;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .features {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .feature-card img {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #3f51b5;
+        }
+
+        .app-preview {
+            background: #f5f5f5;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .app-preview h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .app-preview-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .preview-text {
+            text-align: left;
+        }
+
+        .preview-description {
+            text-align: left;
+        }
+
+        .feature-highlight {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .feature-highlight h4 {
+            color: #3f51b5;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-highlight p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .preview-features {
+            list-style: none;
+        }
+
+        .preview-features li {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #444;
+        }
+
+        .preview-features li::before {
+            content: '✓';
+            color: #3f51b5;
+            margin-right: 0.5rem;
+        }
+
+        .preview-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .preview-image img {
+            max-width: 300px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .footer {
+            background: #333;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .footer p {
+            opacity: 0.8;
+        }
+
+        .hero-logo {
+            margin-bottom: 2rem;
+        }
+
+        .hero-logo img {
+            width: 96px;
+            height: 96px;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .app-preview-content {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 2rem;
+            }
+
+            .preview-text, .preview-description {
+                text-align: center;
+            }
+
+            .preview-features {
+                text-align: left;
+                display: inline-block;
+            }
+
+            .feature-highlight {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">
+                <img src="images/icon.png" alt="Luggo icon">
+                Luggo
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#preview">Preview</a>
+                <a href="#download">Download</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-logo">
+                <img src="images/icon.png" alt="Luggo icon">
+            </div>
+            <h1>Your Smart Luggage Companion</h1>
+            <p>Track, monitor, and manage your luggage with ease. Never worry about overweight baggage or lost items again.</p>
+            <a href="#download" class="cta-button">Download Now</a>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <h2>Why Choose Luggo?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <img src="https://img.icons8.com/fluency/64/scale.png" alt="Weight monitoring">
+                <h3>Weight Monitoring</h3>
+                <p>Real-time weight tracking with customizable limits and alerts to avoid overweight charges.</p>
+            </div>
+            <div class="feature-card">
+                <img src="https://img.icons8.com/fluency/64/marker.png" alt="Location tracking">
+                <h3>Location Tracking</h3>
+                <p>Keep track of your luggage location in real-time with precise GPS tracking and mapping.</p>
+            </div>
+            <div class="feature-card">
+                <img src="https://img.icons8.com/fluency/64/alarm.png" alt="Smart alerts">
+                <h3>Smart Alerts</h3>
+                <p>Receive instant notifications when your luggage moves away or exceeds weight limits.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="app-preview" id="preview">
+        <h2>See Luggo in Action</h2>
+        <div class="app-preview-content">
+            <div class="preview-text">
+                <h3>Smart Features for Modern Travelers</h3>
+                <ul class="preview-features">
+                    <li>✓ Real-time weight monitoring</li>
+                    <li>✓ Customizable weight limits</li>
+                    <li>✓ GPS location tracking</li>
+                    <li>✓ Instant alerts and notifications</li>
+                    <li>✓ User-friendly interface</li>
+                </ul>
+            </div>
+            <div class="preview-description">
+                <div class="feature-highlight">
+                    <h4>Effortless Weight Management</h4>
+                    <p>Monitor your luggage weight in real-time with our intuitive circular display. Set custom limits and receive instant alerts when approaching maximum weight.</p>
+                </div>
+                <div class="feature-highlight">
+                    <h4>Advanced Location Tracking</h4>
+                    <p>Keep track of your luggage with precision using our integrated map view. Get distance indicators and use the 'Ring Luggage' feature to locate your belongings quickly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="download">
+        <h2>Get Started Today</h2>
+        <div class="features-grid" style="max-width: 400px; margin: 0 auto;">
+            <div class="feature-card">
+                <img src="https://img.icons8.com/fluency/64/apple-app-store.png" alt="App Store">
+                <h3>Download for iOS</h3>
+                <p>Available on the App Store for iPhone and iPad devices.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2024 Luggo. All rights reserved.</p>
+    </footer>
+</body>
+</html> 
