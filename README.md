@@ -1,7 +1,46 @@
-# Luggo
+# Luggo - Smart Luggage Companion
 
-This is the Final assessment template for CASA0014 - Please use this template and edit the relevant sections to personalise.
-This section has a short introduction to what the application is
+<p align="center">
+  <img src="assets/icon/icon.png" width="200" alt="Luggo App Icon">
+</p>
+
+## About Luggo
+
+Luggo is a smart luggage companion app designed to enhance your travel experience. It combines real-time weight monitoring and location tracking features to help travelers manage their luggage efficiently.
+
+### Key Features
+
+- **Weight Monitoring**
+  - Real-time weight tracking
+  - Customizable weight limits
+  - Instant alerts for overweight luggage
+  - Visual weight status indicators
+
+- **Location Tracking**
+  - GPS-based luggage tracking
+  - Interactive map interface
+  - Distance indicators
+  - "Ring Luggage" feature for easy locating
+  - Zoom controls for precise location viewing
+
+### Technical Features
+
+- Built with Flutter for iOS
+- Google Maps integration for location services
+- Real-time weight monitoring system
+- Persistent data storage for user preferences
+- Modern and intuitive user interface
+
+### Screenshots
+
+The app features three main screens:
+1. **Home Page**: Quick access to all features with modern card-based design
+2. **Weight Monitor**: Real-time weight tracking with circular progress indicator
+3. **Find Page**: Interactive map interface for luggage location tracking
+
+## Getting Started
+
+[Original content below this point]
 
 ## Use this README File 
 
