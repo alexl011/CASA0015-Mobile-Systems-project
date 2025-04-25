@@ -1,8 +1,8 @@
+# Luggo - Smart Luggage Companion
+
 <p align="center">
   <img src="assets/icon/icon.png" width="200" alt="Luggo App Icon">
 </p>
-
-# Luggo - Smart Luggage Companion
 
 ## About Luggo
 
@@ -28,19 +28,7 @@ Luggo is a smart luggage companion app designed to enhance your travel experienc
 - Built with Flutter for iOS
 - Google Maps integration for location services
 - Real-time weight monitoring system
-- Persistent data storage for user preferences
-- Modern and intuitive user interface
 
-### Screenshots
-
-The app features three main screens:
-1. **Home Page**: Quick access to all features with modern card-based design
-2. **Weight Monitor**: Real-time weight tracking with circular progress indicator
-3. **Find Page**: Interactive map interface for luggage location tracking
-
-## Getting Started
-
-[Original content below this point]
 
 ## Use this README File 
 
