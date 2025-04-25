@@ -1,8 +1,8 @@
-# Luggo - Smart Luggage Companion
-
 <p align="center">
   <img src="assets/icon/icon.png" width="200" alt="Luggo App Icon">
 </p>
+
+# Luggo - Smart Luggage Companion
 
 ## About Luggo
 
