@@ -301,6 +301,7 @@ class _LuggagePageState extends State<LuggagePage> {
   double luggageWeight = 18.5;
   double maxWeight = 23.0;
   final String _weightLimitKey = 'weight_limit';
+  final String _luggageWeightKey = 'luggage_weight';  // New key for storing weight
   SharedPreferences? _prefs;
   final TextEditingController _weightController = TextEditingController();
   bool _isEditing = false;
@@ -309,7 +310,7 @@ class _LuggagePageState extends State<LuggagePage> {
   @override
   void initState() {
     super.initState();
-    _loadSavedWeightLimit();
+    _loadSavedValues();
     _weightController.text = luggageWeight.toStringAsFixed(1);
     
     // Listen to text changes
@@ -354,6 +355,24 @@ class _LuggagePageState extends State<LuggagePage> {
     }
   }
 
+  Future<void> _loadSavedValues() async {
+    _prefs = await SharedPreferences.getInstance();
+    setState(() {
+      maxWeight = _prefs?.getDouble(_weightLimitKey) ?? 23.0;
+      luggageWeight = _prefs?.getDouble(_luggageWeightKey) ?? 18.5;
+    });
+  }
+
+  Future<void> _saveWeightLimit(double value) async {
+    _prefs = await SharedPreferences.getInstance();
+    await _prefs?.setDouble(_weightLimitKey, value);
+  }
+
+  Future<void> _saveLuggageWeight(double value) async {
+    _prefs = await SharedPreferences.getInstance();
+    await _prefs?.setDouble(_luggageWeightKey, value);
+  }
+
   void _finishEditing() {
     if (!_isEditing) return;
     
@@ -366,6 +385,7 @@ class _LuggagePageState extends State<LuggagePage> {
           luggageWeight = newWeight;
           _isEditing = false;
         });
+        _saveLuggageWeight(newWeight);  // Save the new weight
         FocusScope.of(context).unfocus();
       } else {
         _showError('Weight must be between 0 and 100 kg');
@@ -648,18 +668,6 @@ class _LuggagePageState extends State<LuggagePage> {
         ),
       ),
     );
-  }
-
-  Future<void> _loadSavedWeightLimit() async {
-    _prefs = await SharedPreferences.getInstance();
-    setState(() {
-      maxWeight = _prefs?.getDouble(_weightLimitKey) ?? 23.0;
-    });
-  }
-
-  Future<void> _saveWeightLimit(double value) async {
-    _prefs = await SharedPreferences.getInstance();
-    await _prefs?.setDouble(_weightLimitKey, value);
   }
 }
 
