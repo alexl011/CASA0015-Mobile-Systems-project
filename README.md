@@ -47,4 +47,4 @@ Include a section that gives intructions on how to install the app or run it in 
 
 ##  Contact Details
 
-Having Contact Details is also good as it shows people how to get in contact with you if they'd like to contribute to the app. 
+Please contact through my personal email: shihhungl0110@gmail.com
