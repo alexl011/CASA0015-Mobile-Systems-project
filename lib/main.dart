@@ -302,11 +302,352 @@ class _LuggagePageState extends State<LuggagePage> {
   double maxWeight = 23.0;
   final String _weightLimitKey = 'weight_limit';
   SharedPreferences? _prefs;
+  final TextEditingController _weightController = TextEditingController();
+  bool _isEditing = false;
+  final FocusNode _weightFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _loadSavedWeightLimit();
+    _weightController.text = luggageWeight.toStringAsFixed(1);
+    
+    // Listen to text changes
+    _weightController.addListener(_onWeightTextChanged);
+    
+    // Handle focus changes
+    _weightFocusNode.addListener(() {
+      if (!_weightFocusNode.hasFocus && _isEditing) {
+        _finishEditing();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _weightController.removeListener(_onWeightTextChanged);
+    _weightController.dispose();
+    _weightFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _onWeightTextChanged() {
+    final text = _weightController.text;
+    if (text.isEmpty) return;
+
+    // Only allow numbers and one decimal point
+    if (!RegExp(r'^\d*\.?\d*$').hasMatch(text)) {
+      _weightController.text = text.replaceAll(RegExp(r'[^\d.]'), '');
+      return;
+    }
+
+    // Prevent multiple decimal points
+    if (text.split('.').length > 2) {
+      _weightController.text = text.substring(0, text.lastIndexOf('.'));
+      return;
+    }
+
+    // Limit to one decimal place
+    if (text.contains('.') && text.split('.')[1].length > 1) {
+      _weightController.text = double.parse(text).toStringAsFixed(1);
+      return;
+    }
+  }
+
+  void _finishEditing() {
+    if (!_isEditing) return;
+    
+    final text = _weightController.text;
+    
+    try {
+      final newWeight = double.parse(text);
+      if (newWeight >= 0 && newWeight <= 100) {
+        setState(() {
+          luggageWeight = newWeight;
+          _isEditing = false;
+        });
+        FocusScope.of(context).unfocus();
+      } else {
+        _showError('Weight must be between 0 and 100 kg');
+        _resetWeight();
+      }
+    } catch (e) {
+      _resetWeight();
+    }
+  }
+
+  void _resetWeight() {
+    setState(() {
+      _weightController.text = luggageWeight.toStringAsFixed(1);
+      _isEditing = false;
+    });
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _startEditing() {
+    setState(() {
+      _isEditing = true;
+      _weightController.text = luggageWeight.toStringAsFixed(1);
+    });
+    _weightController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _weightController.text.length,
+    );
+    _weightFocusNode.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double percent = (luggageWeight / maxWeight).clamp(0.0, 1.0);
+    bool isOverweight = luggageWeight > maxWeight;
+    double remainingWeight = maxWeight - luggageWeight;
+
+    return GestureDetector(
+      onTap: () {
+        if (_isEditing) {
+          _finishEditing();
+        }
+      },
+      child: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title Section
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Weight Monitor',
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.indigo,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Track and manage your luggage weight',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 32),
+
+                // Weight Indicator Section
+                Center(
+                  child: Column(
+                    children: [
+                      CircularPercentIndicator(
+                        radius: 130.0,
+                        lineWidth: 15.0,
+                        percent: percent,
+                        center: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: _startEditing,
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  border: _isEditing ? Border.all(color: Colors.indigo, width: 2) : null,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: _isEditing
+                                    ? Container(
+                                        width: 100,
+                                        child: TextFormField(
+                                          controller: _weightController,
+                                          focusNode: _weightFocusNode,
+                                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 36,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87,
+                                          ),
+                                          decoration: InputDecoration(
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                            isDense: true,
+                                          ),
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            "${luggageWeight.toStringAsFixed(1)}",
+                                            style: const TextStyle(
+                                              fontSize: 36,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(
+                                            Icons.edit,
+                                            size: 16,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                            Text(
+                              "kg",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        progressColor: isOverweight ? Colors.red : Colors.indigo,
+                        backgroundColor: Colors.grey.shade200,
+                        circularStrokeCap: CircularStrokeCap.round,
+                        animation: true,
+                      ),
+                      SizedBox(height: 24),
+                      // Weight Status Card
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isOverweight ? Colors.red.shade50 : Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isOverweight ? Colors.red.shade200 : Colors.green.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isOverweight ? Icons.warning : Icons.check_circle,
+                              color: isOverweight ? Colors.red : Colors.green,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              isOverweight
+                                  ? 'Overweight by ${(-remainingWeight).toStringAsFixed(1)} kg'
+                                  : '${remainingWeight.toStringAsFixed(1)} kg remaining',
+                              style: const TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 32),
+
+                // Weight Limit Section
+                Card(
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Weight Limit",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              "${maxWeight.toStringAsFixed(1)} kg",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.indigo,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          "Adjust the maximum weight limit:",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        Slider(
+                          value: maxWeight,
+                          min: 10,
+                          max: 50,
+                          divisions: 40,
+                          label: maxWeight.toStringAsFixed(1),
+                          activeColor: Colors.indigo,
+                          onChanged: (value) {
+                            setState(() {
+                              maxWeight = value;
+                            });
+                            _saveWeightLimit(value);
+                          },
+                        ),
+                        // Weight Range Indicators
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "10 kg",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                "50 kg",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadSavedWeightLimit() async {
@@ -319,202 +660,6 @@ class _LuggagePageState extends State<LuggagePage> {
   Future<void> _saveWeightLimit(double value) async {
     _prefs = await SharedPreferences.getInstance();
     await _prefs?.setDouble(_weightLimitKey, value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    double percent = (luggageWeight / maxWeight).clamp(0.0, 1.0);
-    bool isOverweight = luggageWeight > maxWeight;
-    double remainingWeight = maxWeight - luggageWeight;
-
-    return SingleChildScrollView(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title Section
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Weight Monitor',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.indigo,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Track and manage your luggage weight',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 32),
-
-              // Weight Indicator Section
-              Center(
-                child: Column(
-                  children: [
-                    CircularPercentIndicator(
-                      radius: 130.0,
-                      lineWidth: 15.0,
-                      percent: percent,
-                      center: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            "${luggageWeight.toStringAsFixed(1)}",
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            "kg",
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      progressColor: isOverweight ? Colors.red : Colors.indigo,
-                      backgroundColor: Colors.grey.shade200,
-                      circularStrokeCap: CircularStrokeCap.round,
-                      animation: true,
-                    ),
-                    SizedBox(height: 24),
-                    // Weight Status Card
-                    Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isOverweight ? Colors.red.shade50 : Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isOverweight ? Colors.red.shade200 : Colors.green.shade200,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isOverweight ? Icons.warning : Icons.check_circle,
-                            color: isOverweight ? Colors.red : Colors.green,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            isOverweight
-                                ? 'Overweight by ${(-remainingWeight).toStringAsFixed(1)} kg'
-                                : '${remainingWeight.toStringAsFixed(1)} kg remaining',
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 32),
-
-              // Weight Limit Section
-              Card(
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Weight Limit",
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            "${maxWeight.toStringAsFixed(1)} kg",
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.indigo,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        "Adjust the maximum weight limit:",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Slider(
-                        value: maxWeight,
-                        min: 10,
-                        max: 50,
-                        divisions: 40,
-                        label: maxWeight.toStringAsFixed(1),
-                        activeColor: Colors.indigo,
-                        onChanged: (value) {
-                          setState(() {
-                            maxWeight = value;
-                          });
-                          _saveWeightLimit(value);
-                        },
-                      ),
-                      // Weight Range Indicators
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "10 kg",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            Text(
-                              "50 kg",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
