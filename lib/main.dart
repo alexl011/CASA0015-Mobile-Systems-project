@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'styles/map_styles.dart';
 import 'services/gps_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
   runApp(SmartLuggageApp());
@@ -686,17 +688,255 @@ class _FindPageState extends State<FindPage> {
   bool _isConnecting = false;
   bool _isScanning = false;
   List<BluetoothDevice> _devices = [];
+  double _distance = 0.0;
+  LatLng? _userLocation;
 
   @override
   void initState() {
     super.initState();
-    _checkAndStartScan();
+    _initializeLocationServices();
   }
 
-  Future<void> _checkAndStartScan() async {
-    if (!_gpsService.isConnected) {
-      await _startScan();
+  Future<void> _initializeLocationServices() async {
+    try {
+      // Get user's current location
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high
+      );
+      setState(() {
+        _userLocation = LatLng(position.latitude, position.longitude);
+      });
+
+      // Listen to user's location updates
+      Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10, // Update every 10 meters
+        )
+      ).listen((Position position) {
+        setState(() {
+          _userLocation = LatLng(position.latitude, position.longitude);
+          if (luggageLocation != null) {
+            _distance = _calculateDistance(_userLocation!, luggageLocation!);
+          }
+        });
+      });
+    } catch (e) {
+      print('Error getting location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error accessing location services. Please check your permissions.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
+  }
+
+  double _calculateDistance(LatLng start, LatLng end) {
+    // Haversine formula for calculating distance between two points
+    var p = 0.017453292519943295; // Math.PI / 180
+    var c = cos;
+    var a = 0.5 - c((end.latitude - start.latitude) * p)/2 + 
+            c(start.latitude * p) * c(end.latitude * p) * 
+            (1 - c((end.longitude - start.longitude) * p))/2;
+    return 12742 * asin(sqrt(a)) * 1000; // 2 * R * asin(sqrt(a)) where R = 6371 km, result in meters
+  }
+
+  String _formatDistance(double distanceInMeters) {
+    if (distanceInMeters >= 1000) {
+      return '${(distanceInMeters / 1000).toStringAsFixed(1)}km away';
+    } else {
+      return '${distanceInMeters.round()}m away';
+    }
+  }
+
+  @override
+  void dispose() {
+    _gpsService.dispose();
+    super.dispose();
+  }
+
+  Set<Circle> _getLocationIndicators() {
+    return {
+      // Outer glow circle
+      Circle(
+        circleId: CircleId('user_location_glow'),
+        center: _userLocation!,
+        radius: 40,
+        fillColor: Colors.blue[300]!.withOpacity(0.3),
+        strokeColor: Colors.transparent,
+        strokeWidth: 0,
+      ),
+      // Main blue dot
+      Circle(
+        circleId: CircleId('user_location_dot'),
+        center: _userLocation!,
+        radius: 25,
+        fillColor: Colors.blue[600]!,
+        strokeColor: Colors.white,
+        strokeWidth: 2,
+      ),
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double topPadding = MediaQuery.of(context).padding.top;
+    
+    return Scaffold(
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: (controller) {
+              mapController = controller;
+              setState(() {
+                isMapReady = true;
+              });
+              _setMapStyle(controller);
+            },
+            initialCameraPosition: CameraPosition(
+              target: _userLocation ?? LatLng(51.5246, -0.1340), // Default to UCL if no location yet
+              zoom: _currentZoom,
+            ),
+            markers: Set<Marker>.from([
+              if (luggageLocation != null)
+                Marker(
+                  markerId: MarkerId('luggage'),
+                  position: luggageLocation!,
+                  infoWindow: InfoWindow(
+                    title: 'My Luggage',
+                    snippet: 'Last updated: ${DateTime.now().toString().split('.').first}',
+                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+                ),
+            ]),
+            circles: _userLocation != null ? _getLocationIndicators() : {},
+            mapType: MapType.normal,
+            myLocationEnabled: false,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            compassEnabled: true,
+            onCameraMove: (CameraPosition position) {
+              _currentZoom = position.zoom;
+            },
+          ),
+          if (isMapReady && luggageLocation != null && _userLocation != null) ...[
+            Positioned(
+              top: topPadding + 16,
+              left: 16,
+              right: 16,
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.indigo),
+                      SizedBox(width: 8),
+                      Text(
+                        _formatDistance(_distance),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (_isConnecting)
+            Center(
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Connecting to GPS module...'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!_gpsService.isConnected)
+            FloatingActionButton(
+              heroTag: 'scan',
+              onPressed: _startScan,
+              child: Icon(Icons.bluetooth_searching, color: Colors.white),
+              backgroundColor: Colors.indigo,
+            ),
+          SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'center',
+            onPressed: _centerOnLuggage,
+            child: Icon(Icons.center_focus_strong, color: Colors.white),
+            backgroundColor: Colors.indigo,
+          ),
+          SizedBox(height: 16),
+          FloatingActionButton.extended(
+            heroTag: 'ring',
+            onPressed: () {
+              triggerSound();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.volume_up, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('Signal sent to luggage'),
+                    ],
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              );
+            },
+            icon: Icon(Icons.volume_up, color: Colors.white),
+            label: Text(
+              'Ring Luggage',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: Colors.indigo,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void triggerSound() {
+    print('🔊 Luggage is beeping!'); // Replace with actual Bluetooth/IoT trigger logic
+  }
+
+  void _centerOnLuggage() {
+    mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: luggageLocation ?? LatLng(37.4219999, -122.0840575),
+          zoom: 17.0,
+          tilt: 45.0,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _setMapStyle(GoogleMapController controller) async {
+    await controller.setMapStyle(MapStyles.lightStyle);
   }
 
   Future<void> _startScan() async {
@@ -1038,26 +1278,36 @@ class _FindPageState extends State<FindPage> {
       await _gpsService.connectToGPS();
       
       setState(() {
-        _isConnecting = false;  // Set connecting state to false after successful connection
+        _isConnecting = false;
       });
 
+      // Listen to GPS location updates
       _gpsService.locationStream.listen((location) {
         setState(() {
           luggageLocation = LatLng(location['latitude']!, location['longitude']!);
+          if (_userLocation != null) {
+            _distance = _calculateDistance(_userLocation!, luggageLocation!);
+          }
         });
         _updateMap();
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Connected to GPS module')),
+        SnackBar(
+          content: Text('Connected to GPS module'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       setState(() {
-        _isConnecting = false;  // Set connecting state to false after failed connection
+        _isConnecting = false;
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to connect to GPS module: $e')),
+        SnackBar(
+          content: Text('Failed to connect to GPS module: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -1068,169 +1318,5 @@ class _FindPageState extends State<FindPage> {
         CameraUpdate.newLatLng(luggageLocation!),
       );
     }
-  }
-
-  @override
-  void dispose() {
-    _gpsService.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final double topPadding = MediaQuery.of(context).padding.top;
-    
-    return Scaffold(
-      body: Stack(
-        children: [
-          GoogleMap(
-            onMapCreated: (controller) {
-              mapController = controller;
-              setState(() {
-                isMapReady = true;
-              });
-              _setMapStyle(controller);
-            },
-            initialCameraPosition: CameraPosition(
-              target: luggageLocation ?? LatLng(37.4219999, -122.0840575),
-              zoom: _currentZoom,
-            ),
-            markers: luggageLocation == null ? {} : {
-              Marker(
-                markerId: MarkerId('luggage'),
-                position: luggageLocation!,
-                infoWindow: InfoWindow(
-                  title: 'My Luggage',
-                  snippet: 'Last updated: ${DateTime.now().toString().split('.').first}',
-                ),
-                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
-              ),
-            },
-            mapType: MapType.normal,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            compassEnabled: true,
-            onCameraMove: (CameraPosition position) {
-              _currentZoom = position.zoom;
-            },
-          ),
-          if (isMapReady) ...[
-            Positioned(
-              top: topPadding + 16,
-              left: 16,
-              right: 16,
-              child: Card(
-                elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      Icon(Icons.location_on, color: Colors.indigo),
-                      SizedBox(width: 8),
-                      Text(
-                        'Distance: 120m away',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-          if (_isConnecting)
-            Center(
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Connecting to GPS module...'),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!_gpsService.isConnected)
-            FloatingActionButton(
-              heroTag: 'scan',
-              onPressed: _startScan,
-              child: Icon(Icons.bluetooth_searching, color: Colors.white),
-              backgroundColor: Colors.indigo,
-            ),
-          SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'center',
-            onPressed: _centerOnLuggage,
-            child: Icon(Icons.center_focus_strong, color: Colors.white),
-            backgroundColor: Colors.indigo,
-          ),
-          SizedBox(height: 16),
-          FloatingActionButton.extended(
-            heroTag: 'ring',
-            onPressed: () {
-              triggerSound();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.volume_up, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('Signal sent to luggage'),
-                    ],
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              );
-            },
-            icon: Icon(Icons.volume_up, color: Colors.white),
-            label: Text(
-              'Ring Luggage',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            backgroundColor: Colors.indigo,
-          ),
-        ],
-      ),
-    );
-  }
-
-  void triggerSound() {
-    print('🔊 Luggage is beeping!'); // Replace with actual Bluetooth/IoT trigger logic
-  }
-
-  void _centerOnLuggage() {
-    mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: luggageLocation ?? LatLng(37.4219999, -122.0840575),
-          zoom: 17.0,
-          tilt: 45.0,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _setMapStyle(GoogleMapController controller) async {
-    await controller.setMapStyle(MapStyles.lightStyle);
   }
 }
