@@ -32,11 +32,9 @@ Luggo is a smart luggage companion app designed to enhance your travel experienc
 ##Landing Page
 
 
-## Screen Shots
-
-Luggo helps you monitor your luggage weight, track its real-time location, and find it easily using Bluetooth and GPS technology.
 
 ## 📸 Screenshots
+Luggo helps you monitor your luggage weight, track its real-time location, and find it easily using Bluetooth and GPS technology.
 
 | Home Screen | Weight Monitor | Find Luggage |
 |:-----------:|:-------------:|:------------:|

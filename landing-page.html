@@ -216,14 +216,80 @@
         }
 
         .footer {
-            background: #333;
-            color: white;
-            padding: 2rem;
+            background: #23272f;
+            color: #e0e0e0;
+            padding: 32px 0 16px 0;
             text-align: center;
+            font-size: 15px;
+            margin-top: 48px;
         }
 
-        .footer p {
-            opacity: 0.8;
+        .footer-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .footer-brand {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .footer-title {
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .footer-desc {
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: #b0b0b0;
+            margin-top: 2px;
+        }
+
+        .footer-links {
+            margin: 8px 0;
+        }
+
+        .footer-links a {
+            color: #90caf9;
+            text-decoration: none;
+            margin: 0 8px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .footer-divider {
+            color: #444;
+            margin: 0 6px;
+        }
+
+        .footer-copy {
+            font-size: 0.95rem;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .footer-container {
+                padding: 0 12px;
+            }
+            .footer-links {
+                font-size: 0.98rem;
+            }
         }
 
         .hero-logo {
@@ -357,7 +423,20 @@
     </section>
 
     <footer class="footer">
-        <p>&copy; 2024 Luggo. All rights reserved.</p>
+        <div class="footer-container">
+            <div class="footer-brand">
+                <span class="footer-title">Luggo</span>
+                <span class="footer-desc">Your Smart Luggage Companion</span>
+            </div>
+            <div class="footer-links">
+                <a href="mailto:shihhungl0110@gmail.com">Contact</a>
+                <span class="footer-divider">|</span>
+                <a href="https://github.com/alexl011/CASA0015-Mobile-Systems-project" target="_blank">GitHub</a>
+            </div>
+            <div class="footer-copy">
+                &copy; 2024 CASA0015 Mobile Systems Project
+            </div>
+        </div>
     </footer>
 </body>
 </html> 
