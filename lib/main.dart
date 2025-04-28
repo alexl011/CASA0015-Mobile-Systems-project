@@ -554,7 +554,7 @@ class _LuggagePageState extends State<LuggagePage> {
                           color: isOverweight ? Colors.red.shade50 : Colors.green.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isOverweight ? Colors.red.shade200 : Colors.green.shade200,
+                            color: isOverweight ? const Color.fromARGB(255, 90, 79, 79) : Colors.green.shade200,
                             width: 1,
                           ),
                         ),
