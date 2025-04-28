@@ -10,7 +10,7 @@ date: "10 Dec 2021"
 
 # Submission Guide
 
-You will need to edit this file, create a PDF using the instructions below, from this file.   Sign it digitally and upload to Moodle
+You will need to edit this file, create a PDF using the instructions below, from this file. Sign it digitally and upload to Moodle
 
 ## How to create a PDF from Markdown
 When finished you should export to PDF using VSCode and MarkdownPDF Extension. Make sure you select no headers and no footers in the
@@ -31,7 +31,7 @@ The application features three main components: a home dashboard providing quick
 
 The application incorporates comprehensive features including real-time GPS tracking with Google Maps integration and Bluetooth connectivity for GPS module communication. Users can set and monitor custom weight limits with visual indicators and interact with an intuitive map interface that displays distance information. The emergency luggage locator function includes a sound alert system to help users quickly locate their belongings. The app also implements persistent storage for user preferences, ensuring settings are maintained between sessions.
 
-The app is built using Flutter for cross-platform compatibility on iOS and Android, ensuring a consistent user experience across devices. It employs various hardware sensors through a Bluetooth connection, making it a practical solution for travelers concerned about luggage security and airline weight restrictions. The modern, intuitive user interface follows material design principles, providing a seamless and engaging experience for users of all technical backgrounds.
+This app is built using Flutter for cross-platform compatibility on iOS and Android, ensuring a consistent user experience across devices. It employs various hardware sensors through a Bluetooth connection, making it a practical solution for travelers concerned about luggage security and airline weight restrictions. The modern, intuitive user interface follows material design principles, providing a seamless and engaging experience for users of all technical backgrounds.
 
 ## Biblography
 
@@ -58,7 +58,7 @@ I, Alex Lin, confirm that the work presented in this assessment is my own. Where
 
 Alex Lin
 
-ASSESSMENT DATE
+28, April 2025
 
 
 
