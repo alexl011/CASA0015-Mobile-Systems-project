@@ -29,7 +29,8 @@ Luggo is a smart luggage companion app designed to enhance your travel experienc
 - Google Maps integration for location services
 - Real-time weight monitoring system
 
-##Landing Page
+## Landing Page
+Check out our landing page here: https://alexl011.github.io/luggo-landing-page/ 
 
 
 
