@@ -51,17 +51,52 @@ Luggo helps you monitor your luggage weight, track its real-time location, and f
 - [flutter_blue_plus](https://pub.dev/packages/flutter_blue_plus) – Bluetooth communication
 - [geolocator](https://pub.dev/packages/geolocator) – Device location services
 
-## 🎬 Demo Video
+## 🚀 Installation & Running the App
 
-[![Watch the demo](https://img.shields.io/badge/Watch%20Demo-YouTube-red?logo=youtube)](YOUR_VIDEO_LINK_HERE)
+### Prerequisites
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (version 3.2.3 or higher)
+- Dart SDK (comes with Flutter)
+- Xcode (for iOS development)
+- A device or emulator
 
-> _Replace `YOUR_VIDEO_LINK_HERE` with the link to your presentation video._
+### Plugin Versions Used
+This project uses the following plugin versions (see `pubspec.yaml` for details):
+- `google_maps_flutter: ^2.5.3`
+- `percent_indicator: ^4.2.3`
+- `shared_preferences: ^2.2.2`
+- `flutter_blue_plus: ^1.31.16`
+- `location: ^5.0.3`
+- `provider: ^6.1.1`
+- `geolocator: ^11.0.0`
 
----
+### Setup Instructions
 
-## Include A Section That Tells Developers How To Install The App
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/alexl011/CASA0015-Mobile-Systems-project.git
+   cd CASA0015-Mobile-Systems-project
+   ```
 
-Include a section that gives intructions on how to install the app or run it in Flutter.  What versions of the plugins are you assuming?  Maybe define a licence
+2. **Install dependencies:**
+   ```sh
+   flutter pub get
+   ```
+
+3. **(iOS only) Install CocoaPods dependencies:**
+   ```sh
+   cd ios
+   pod install
+   cd ..
+   ```
+
+4. **Run the app:**
+     ```sh
+     flutter run
+     ```
+
+5. **Permissions:**
+   - Make sure to allow location and Bluetooth permissions on your device.
+
 
 ##  Contact Details
 
